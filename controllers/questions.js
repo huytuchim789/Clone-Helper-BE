@@ -51,13 +51,41 @@ exports.show = async (req, res, next) => {
 };
 
 exports.listQuestions = async (req, res, next) => {
-  try {
-    const { sortType = '-score' } = req.body;
-    const questions = await Question.find().sort(sortType);
-    res.json(questions);
+  try{
+    
+    const page = parseInt(req.query.page) || 1;
+    const pageSize = parseInt(req.query.limit) || 10;
+    const skip = (page - 1) * pageSize;
+
+
+    const total = await Question.countDocuments(req.query.key ? {
+      "$or":[
+        {title:{$regex:req.query.key, $options: 'i'}},
+        {text:{$regex:req.query.key, $options: 'i'}}
+    ]
+    } : {});
+
+    const result = await Question.find(req.query.key ? {
+      "$or":[
+        {title:{$regex:req.query.key, $options: 'i'}},
+        {text:{$regex:req.query.key, $options: 'i'}}
+    ]
+    } : {}).skip(skip).limit(pageSize);
+
+    const pages = Math.ceil(total / pageSize);
+
+    res.status(200).json({
+      status: "success",
+      count: result.length,
+      page,
+      pages,
+      total,
+      data: result,
+    });
   } catch (error) {
     next(error);
   }
+
 };
 
 exports.listByTags = async (req, res, next) => {
