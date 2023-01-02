@@ -19,6 +19,7 @@ const questionSchema = new Schema({
   comments: [commentSchema],
   answers: [answerSchema],
   created: { type: Date, default: Date.now },
+  isBlocked: { type: Boolean, default: false },
   views: { type: Number, default: 0 }
 });
 
@@ -96,6 +97,11 @@ questionSchema.methods = {
     if (!answer) throw new Error('Answer not found');
     answer.remove();
     return this.save();
+  },
+  blockQuestion: function () {
+    this.isBlocked = true;
+    this.save();
+    return this;
   }
 };
 

@@ -14,14 +14,16 @@ const {
   listQuestions,
   listByTags,
   listByUser,
-  removeQuestion
+  removeQuestion,
+  blockQuestion
 } = require('./controllers/questions');
 const {
   loadAnswers,
   answerValidate,
   createAnswer,
   removeAnswer,
-  editAnswer
+  editAnswer,
+  blockAnswer
 } = require('./controllers/answers');
 const { listPopulerTags, searchTags, listTags } = require('./controllers/tags');
 const { upvote, downvote, unvote } = require('./controllers/votes');
@@ -33,7 +35,7 @@ const {
   editComment
 } = require('./controllers/comments');
 
-const requireAuth = require('./middlewares/requireAuth');
+const { requireAuth, requireAdmin } = require('./middlewares/requireAuth');
 const questionAuth = require('./middlewares/questionAuth');
 const commentAuth = require('./middlewares/commentAuth');
 const answerAuth = require('./middlewares/answerAuth');
@@ -81,6 +83,9 @@ router.put('/comment/:question/:answer/:comment?', [requireAuth, validate], edit
 
 router.delete('/comment/:question/:comment', [requireAuth, commentAuth], removeComment);
 router.delete('/comment/:question/:answer/:comment', [requireAuth, commentAuth], removeComment);
+
+//blocked
+router.put('/blocked/:question/', [requireAuth, validate, requireAdmin], blockQuestion);
 
 module.exports = (app) => {
   app.use('/api', router);
