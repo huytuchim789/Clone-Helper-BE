@@ -4,7 +4,8 @@ const {
   authenticate,
   listUsers,
   search,
-  find
+  find,
+  blockUser
 } = require('./controllers/users');
 const {
   loadQuestions,
@@ -85,7 +86,8 @@ router.delete('/comment/:question/:comment', [requireAuth, commentAuth], removeC
 router.delete('/comment/:question/:answer/:comment', [requireAuth, commentAuth], removeComment);
 
 //blocked
-router.put('/blocked/:question/', [requireAuth, validate, requireAdmin], blockQuestion);
+router.put('/blocked/question/:question/', [requireAuth, validate, requireAdmin], blockQuestion);
+router.put('/blocked/user/:username/', [requireAuth, validate, requireAdmin], blockUser);
 
 module.exports = (app) => {
   app.use('/api', router);

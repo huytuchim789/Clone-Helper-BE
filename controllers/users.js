@@ -138,7 +138,18 @@ exports.find = async (req, res, next) => {
     next(error);
   }
 };
-
+exports.blockUser = async (req, res, next) => {
+  const result = validationResult(req);
+  try {
+    const user = await User.findOne({ _id: req.params.username });
+    user.isBlocked = true;
+    await user.save();
+    res.status(201).json(user);
+  } catch (error) {
+    console.log(error);
+    next(error);
+  }
+};
 exports.validateUser = [
   body('username')
     .exists()
