@@ -19,6 +19,13 @@ const {
   blockQuestion
 } = require('./controllers/questions');
 const {
+  loadBlogs,
+  listBlogs,
+  createBlog,
+  blogValidate,
+  showBlog
+} = require('./controllers/blogs');
+const {
   loadAnswers,
   answerValidate,
   createAnswer,
@@ -60,6 +67,13 @@ router.get('/question', listQuestions);
 router.get('/questions/:tags', listByTags);
 router.get('/question/user/:username', listByUser);
 router.delete('/question/:question', [requireAuth, questionAuth], removeQuestion);
+
+//blogs 
+router.param('/blog', loadBlogs);
+router.get('/blog-by-id', showBlog);
+router.get('/blog', listBlogs);
+router.post('/blog', [requireAuth, blogValidate], createBlog);
+
 
 //tags
 router.get('/tags/populertags', listPopulerTags);
