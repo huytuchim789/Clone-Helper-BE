@@ -24,7 +24,7 @@ const {
   createBlog,
   blogValidate,
   showBlog,
-  editBlog,
+  editBlog
 } = require('./controllers/blogs');
 const {
   loadAnswers,
@@ -49,6 +49,7 @@ const { requireAuth, requireAdmin } = require('./middlewares/requireAuth');
 const questionAuth = require('./middlewares/questionAuth');
 const commentAuth = require('./middlewares/commentAuth');
 const answerAuth = require('./middlewares/answerAuth');
+const { follow, followValidate, isFollow } = require('./controllers/follow');
 
 const router = require('express').Router();
 
@@ -70,13 +71,12 @@ router.get('/questions/:tags', listByTags);
 router.get('/question/user/:username', listByUser);
 router.delete('/question/:question', [requireAuth, questionAuth], removeQuestion);
 
-//blogs 
+//blogs
 router.param('/blog', loadBlogs);
 router.get('/blog-by-id', showBlog);
 router.get('/blog', listBlogs);
 router.post('/blog', [requireAuth, blogValidate], createBlog);
 router.put('/blog/:id', editBlog);
-
 
 //tags
 router.get('/tags/populertags', listPopulerTags);
@@ -106,6 +106,10 @@ router.delete('/comment/:question/:answer/:comment', [requireAuth, commentAuth],
 //blocked
 router.put('/blocked/question/:question/', [requireAuth, validate, requireAdmin], blockQuestion);
 router.put('/blocked/user/:username/', [requireAuth, validate, requireAdmin], blockUser);
+
+//follow
+router.post('/follow', [requireAuth, followValidate], follow);
+router.get('/is-follow', [requireAuth], isFollow);
 
 module.exports = (app) => {
   app.use('/api', router);

@@ -83,7 +83,10 @@ exports.authenticate = async (req, res) => {
         message: 'Wrong username or password.'
       });
     }
-
+    if (user?.isBlocked)
+      return res.status(401).json({
+        message: 'Your account has been blocked or deleted.'
+      });
     const passwordValid = await verifyPassword(password, user.password);
 
     if (passwordValid) {
