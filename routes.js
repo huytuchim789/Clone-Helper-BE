@@ -5,7 +5,8 @@ const {
   listUsers,
   search,
   find,
-  blockUser
+  blockUser,
+  editUser
 } = require('./controllers/users');
 const {
   loadQuestions,
@@ -61,7 +62,7 @@ router.post('/authenticate', validateUser, authenticate);
 router.get('/users', listUsers);
 router.get('/users/:search', search);
 router.get('/user/:username', find);
-
+router.post('/user-edit', [requireAuth], editUser);
 //questions
 router.param('question', loadQuestions);
 router.post('/questions', [requireAuth, questionValidate], createQuestion);
