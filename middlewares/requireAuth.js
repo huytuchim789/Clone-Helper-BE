@@ -14,6 +14,10 @@ const requireAuth = (req, res, next) => {
     });
 
     req.user = decodedToken;
+    if (decodedToken?.isBlocked)
+      return res.status(401).json({
+        message: 'Your account has been blocked or deleted.'
+      });
     next();
   } catch (error) {
     return res.status(401).json({

@@ -1,5 +1,8 @@
 const User = require('../models/user');
 const jwtDecode = require('jwt-decode');
+const { cloudinary } = require('../utils/cloudinary');
+const axios = require('axios');
+
 const { body, validationResult } = require('express-validator');
 
 const { createToken, hashPassword, verifyPassword } = require('../utils/authentication');
@@ -83,7 +86,10 @@ exports.authenticate = async (req, res) => {
         message: 'Wrong username or password.'
       });
     }
-
+    if (user?.isBlocked)
+      return res.status(401).json({
+        message: 'Your account has been blocked or deleted.'
+      });
     const passwordValid = await verifyPassword(password, user.password);
 
     if (passwordValid) {
@@ -129,7 +135,40 @@ exports.search = async (req, res, next) => {
     next(error);
   }
 };
-
+exports.editUser = async (req, res, next) => {
+  const { id } = req.user;
+  try {
+    if (!req.body.img) {
+      const result = await User.findOneAndUpdate(
+        { _id: id },
+        {
+          $set: {
+            displayName: req.body.displayName,
+            profile: req.body.profile
+          }
+        }
+      );
+    } else {
+      const uploadedResponse = await cloudinary.uploader.upload(req.body.img, {
+        upload_preset: 'ehwtbisx'
+      });
+      const result = await User.findOneAndUpdate(
+        { _id: id },
+        {
+          $set: {
+            profilePhoto: uploadedResponse.url,
+            displayName: req.body.displayName,
+            profile: req.body.profile
+          }
+        }
+      );
+    }
+    return res.status(200).json({});
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json(error);
+  }
+};
 exports.find = async (req, res, next) => {
   try {
     const users = await User.findOne({ username: req.params.username });
