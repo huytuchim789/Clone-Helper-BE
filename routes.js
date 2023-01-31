@@ -23,7 +23,8 @@ const {
   listBlogs,
   createBlog,
   blogValidate,
-  showBlog
+  showBlog,
+  editBlog,
 } = require('./controllers/blogs');
 const {
   loadAnswers,
@@ -40,7 +41,8 @@ const {
   validate,
   createComment,
   removeComment,
-  editComment
+  editComment,
+  createCommentBlog
 } = require('./controllers/comments');
 
 const { requireAuth, requireAdmin } = require('./middlewares/requireAuth');
@@ -73,6 +75,7 @@ router.param('/blog', loadBlogs);
 router.get('/blog-by-id', showBlog);
 router.get('/blog', listBlogs);
 router.post('/blog', [requireAuth, blogValidate], createBlog);
+router.put('/blog/:id', editBlog);
 
 
 //tags
@@ -94,6 +97,7 @@ router.get('/votes/unvote/:question/:answer?', requireAuth, unvote);
 //comments
 router.param('comment', loadComments);
 router.post('/comment/:question/:answer?', [requireAuth, validate], createComment);
+router.post('/comment-blog/:question/:answer?', [requireAuth, validate], createCommentBlog);
 router.put('/comment/:question/:answer/:comment?', [requireAuth, validate], editComment);
 
 router.delete('/comment/:question/:comment', [requireAuth, commentAuth], removeComment);

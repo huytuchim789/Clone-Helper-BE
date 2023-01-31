@@ -43,6 +43,32 @@ exports.createComment = async (req, res, next) => {
     next(error);
   }
 };
+
+exports.createCommentBlog = async (req, res, next) => {
+  const result = validationResult(req);
+
+  if (!result.isEmpty()) {
+    const errors = result.array({ onlyFirstError: true });
+    return res.status(422).json({ errors });
+  }
+
+  try {
+    const { id } = req.user;
+    const { comment } = req.body;
+
+    if (req.params.answer) {
+      req.answer.addComment(id, comment);
+      const question = await req.question.save();
+      return res.status(201).json(question);
+    }
+
+    const question = await req.question.addComment(id, comment);
+    return res.status(201).json(question);
+  } catch (error) {
+    next(error);
+  }
+};
+
 exports.editComment = async (req, res, next) => {
   const result = validationResult(req);
 

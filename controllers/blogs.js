@@ -94,6 +94,27 @@ exports.listBlogs = async (req, res, next) => {
     }
   };
 
+  exports.editBlog = async (req, res) => {
+    let blog = req.body;
+
+    // const editBlog = new Blog(blog);
+    try{
+        await Blog.updateOne({_id: req.params.id}, blog);
+        res.status(201).json(blog);
+    } catch (error){
+        res.status(409).json({ message: error.message});     
+    }
+}
+
+  exports.removeQuestion = async (req, res, next) => {
+    try {
+      await req.blog.remove();
+      res.json({ message: 'Your question successfully deleted.' });
+    } catch (error) {
+      next(error);
+    }
+  };
+
 exports.blogValidate = [
     body('title')
       .exists()
