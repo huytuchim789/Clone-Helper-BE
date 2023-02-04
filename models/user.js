@@ -3,7 +3,7 @@ const Schema = mongoose.Schema;
 
 const userModel = new Schema({
   username: { type: String, required: true, unique: true },
-  displayName: { type: String, required: true },
+  displayName: { type: String },
   profile: { type: String },
 
   password: { type: String, required: true },
@@ -16,6 +16,7 @@ const userModel = new Schema({
     }
   },
   isBlocked: { type: Boolean, default: false },
+  exp: { type: String, default: '0-3' },
   created: { type: Date, default: Date.now }
 });
 

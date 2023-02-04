@@ -63,6 +63,7 @@ exports.signup = async (req, res) => {
       });
     }
   } catch (error) {
+    console.log(error);
     return res.status(400).json({
       message: 'There was a problem creating your account.'
     });
@@ -96,8 +97,8 @@ exports.authenticate = async (req, res) => {
       const token = createToken(user);
       const decodedToken = jwtDecode(token);
       const expiresAt = decodedToken.exp;
-      const { username, role, id, created, profilePhoto } = user;
-      const userInfo = { username, role, id, created, profilePhoto };
+      const { username, role, id, created, profilePhoto, exp } = user;
+      const userInfo = { username, role, id, created, profilePhoto, exp };
 
       res.json({
         message: 'Authentication successful!',
@@ -144,7 +145,8 @@ exports.editUser = async (req, res, next) => {
         {
           $set: {
             displayName: req.body.displayName,
-            profile: req.body.profile
+            profile: req.body.profile,
+            exp: req.body.exp
           }
         }
       );
@@ -158,7 +160,8 @@ exports.editUser = async (req, res, next) => {
           $set: {
             profilePhoto: uploadedResponse.url,
             displayName: req.body.displayName,
-            profile: req.body.profile
+            profile: req.body.profile,
+            exp: req.body.exp
           }
         }
       );
