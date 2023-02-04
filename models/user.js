@@ -16,6 +16,7 @@ const userModel = new Schema({
     }
   },
   isBlocked: { type: Boolean, default: false },
+  exp: { type: String, default: '0-3' },
   created: { type: Date, default: Date.now }
 });
 

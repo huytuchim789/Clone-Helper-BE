@@ -1,4 +1,6 @@
 const Follow = require('../models/follow');
+const User = require('../models/user');
+
 const { body, validationResult } = require('express-validator');
 
 exports.follow = async (req, res) => {
@@ -38,6 +40,21 @@ exports.isFollow = async (req, res) => {
     }
     return res.status(200).json({ isFollow: true });
   } catch (error) {
+    return res.status(500).json({ error: error });
+  }
+};
+exports.listFollowing = async (req, res) => {
+  const { username } = req.params;
+  try {
+    const author = await User.findOne({ username });
+    const result = await Follow.find({ follower: author._id })
+      .populate('follower')
+      .populate('followee')
+      .exec();
+
+    return res.status(200).json(result?.map((r) => r?.followee));
+  } catch (error) {
+    console.log(error);
     return res.status(500).json({ error: error });
   }
 };

@@ -25,7 +25,8 @@ const {
   createBlog,
   blogValidate,
   showBlog,
-  editBlog
+  editBlog,
+  listBlogsByUser
 } = require('./controllers/blogs');
 const {
   loadAnswers,
@@ -50,7 +51,7 @@ const { requireAuth, requireAdmin } = require('./middlewares/requireAuth');
 const questionAuth = require('./middlewares/questionAuth');
 const commentAuth = require('./middlewares/commentAuth');
 const answerAuth = require('./middlewares/answerAuth');
-const { follow, followValidate, isFollow } = require('./controllers/follow');
+const { follow, followValidate, isFollow, listFollowing } = require('./controllers/follow');
 
 const router = require('express').Router();
 
@@ -78,6 +79,7 @@ router.get('/blog-by-id', showBlog);
 router.get('/blog', listBlogs);
 router.post('/blog', [requireAuth, blogValidate], createBlog);
 router.put('/blog/:id', editBlog);
+router.get('/blog/user/:username', listBlogsByUser);
 
 //tags
 router.get('/tags/populertags', listPopulerTags);
@@ -110,6 +112,7 @@ router.put('/blocked/user/:username/', [requireAuth, validate, requireAdmin], bl
 
 //follow
 router.post('/follow', [requireAuth, followValidate], follow);
+router.get('/:username/follow-list', listFollowing);
 router.get('/is-follow', [requireAuth], isFollow);
 
 module.exports = (app) => {

@@ -144,7 +144,8 @@ exports.editUser = async (req, res, next) => {
         {
           $set: {
             displayName: req.body.displayName,
-            profile: req.body.profile
+            profile: req.body.profile,
+            exp: req.body.exp
           }
         }
       );
@@ -158,7 +159,8 @@ exports.editUser = async (req, res, next) => {
           $set: {
             profilePhoto: uploadedResponse.url,
             displayName: req.body.displayName,
-            profile: req.body.profile
+            profile: req.body.profile,
+            exp: req.body.exp
           }
         }
       );
