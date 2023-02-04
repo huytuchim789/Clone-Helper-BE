@@ -51,23 +51,25 @@ exports.show = async (req, res, next) => {
     next(error);
   }
 };
-
 exports.listQuestions = async (req, res, next) => {
   try {
     const page = parseInt(req.query.page) || 1;
     const pageSize = parseInt(req.query.limit) || 4;
     const skip = (page - 1) * pageSize;
+    const { exp } = req.query;
 
-    const total = await Question.countDocuments(
-      req.query.key
-        ? {
-            $or: [
-              { title: { $regex: req.query.key, $options: 'i' } },
-              { text: { $regex: req.query.key, $options: 'i' } }
-            ]
-          }
-        : {}
-    );
+    // const result = await Question.aggregate(
+    //   req.query.key
+    //     ? {
+    //         $or: [
+    //           { title: { $regex: req.query.key, $options: 'i' } },
+    //           { text: { $regex: req.query.key, $options: 'i' } }
+    //         ]
+    //       }
+    //     : {}
+    // )
+    //   .skip(skip)
+    //   .limit(pageSize);
     const total2 = await User.countDocuments(
       req.query.key
         ? {
@@ -75,59 +77,153 @@ exports.listQuestions = async (req, res, next) => {
           }
         : {}
     );
-    const total3 = await Blog.countDocuments(
-      req.query.key
-        ? {
-            $or: [{ username: { $regex: req.query.key, $options: 'i' } }]
-          }
-        : {}
-    );
-
-    const result = await Question.find(
-      req.query.key
-        ? {
-            $or: [
-              { title: { $regex: req.query.key, $options: 'i' } },
-              { text: { $regex: req.query.key, $options: 'i' } }
-            ]
-          }
-        : {}
-    )
-      .skip(skip)
-      .limit(pageSize);
+    const result = await Question.aggregate([
+      {
+        $lookup: {
+          from: 'users',
+          localField: 'author',
+          foreignField: '_id',
+          as: 'author'
+        }
+      },
+      {
+        $unwind: {
+          path: '$author',
+          preserveNullAndEmptyArrays: true
+        }
+      },
+      {
+        $match: {
+          $and: [
+            {
+              $or: [
+                { title: { $regex: req.query.key || '(.*?)', $options: 'i' } },
+                { text: { $regex: req.query.key || '(.*?)', $options: 'i' } }
+              ]
+            },
+            exp
+              ? {
+                  'author.exp': exp
+                }
+              : {}
+          ]
+        }
+      },
+      {
+        $facet: {
+          count: [
+            {
+              $group: {
+                _id: null,
+                myCount: {
+                  $sum: 1
+                }
+              }
+            }
+          ],
+          paginated: [
+            {
+              $skip: skip
+            },
+            {
+              $limit: pageSize
+            }
+          ]
+        }
+      }
+    ]);
     const result2 = await User.find(
       req.query.key
         ? {
-            $or: [{ username: { $regex: req.query.key, $options: 'i' } }]
-          }
-        : {}
-    )
-      .skip(skip)
-      .limit(pageSize);
-    const result3 = await Blog.find(
-      req.query.key
-        ? {
-            $or: [
-              { title: { $regex: req.query.key, $options: 'i' } },
-              { text: { $regex: req.query.key, $options: 'i' } }
+            $and: [
+              {
+                $or: [{ username: { $regex: req.query.key, $options: 'i' } }]
+              },
+              exp
+                ? {
+                    'author.exp': exp
+                  }
+                : {}
             ]
           }
         : {}
     )
       .skip(skip)
       .limit(pageSize);
-
-    const pages = Math.ceil(total + total2 + total3 / pageSize);
+    const result3 = await Blog.aggregate([
+      {
+        $lookup: {
+          from: 'users',
+          localField: 'author',
+          foreignField: '_id',
+          as: 'author'
+        }
+      },
+      {
+        $unwind: {
+          path: '$author',
+          preserveNullAndEmptyArrays: true
+        }
+      },
+      {
+        $match: {
+          $and: [
+            {
+              $or: [
+                { title: { $regex: req.query.key || '(.*?)', $options: 'i' } },
+                { text: { $regex: req.query.key || '(.*?)', $options: 'i' } }
+              ]
+            },
+            {
+              'author.exp': exp
+                ? {
+                    'author.exp': exp
+                  }
+                : {}
+            }
+          ]
+        }
+      },
+      {
+        $facet: {
+          count: [
+            {
+              $group: {
+                _id: null,
+                myCount: {
+                  $sum: 1
+                }
+              }
+            }
+          ],
+          paginated: [
+            {
+              $skip: skip
+            },
+            {
+              $limit: pageSize
+            }
+          ]
+        }
+      }
+    ]);
+    console.log(result);
+    const pages = Math.ceil(
+      (result?.[0].count[0]?.myCount ||
+        0 + result2?.length + result3?.[0]?.count[0]?.myCount ||
+        0) / pageSize
+    );
 
     res.status(200).json({
       status: 'success',
-      count: result.length + result2.length + result3.length,
+      count: result?.[0].paginated.length + result.length + result3?.[0].paginated.length,
       page,
       pages,
-      total: total + total2 + total3,
-      data: { questions: result, users: result2, blogs: result3 }
+      total: result?.[0]?.count[0]?.myCount || 0 + total2 + result3?.[0]?.count[0]?.myCount || 0,
+      data: { questions: result?.[0].paginated, users: result2, blogs: result3?.[0].paginated }
     });
   } catch (error) {
+    console.log(error);
     next(error);
   }
 };
