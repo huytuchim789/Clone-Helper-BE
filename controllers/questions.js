@@ -54,176 +54,44 @@ exports.show = async (req, res, next) => {
 exports.listQuestions = async (req, res, next) => {
   try {
     const page = parseInt(req.query.page) || 1;
-    const pageSize = parseInt(req.query.limit) || 4;
+    const pageSize = parseInt(req.query.limit) || 10;
     const skip = (page - 1) * pageSize;
-    const { exp } = req.query;
 
-    // const result = await Question.aggregate(
-    //   req.query.key
-    //     ? {
-    //         $or: [
-    //           { title: { $regex: req.query.key, $options: 'i' } },
-    //           { text: { $regex: req.query.key, $options: 'i' } }
-    //         ]
-    //       }
-    //     : {}
-    // )
-    //   .skip(skip)
-    //   .limit(pageSize);
-    const total2 = await User.countDocuments(
+    const total = await Question.countDocuments(
       req.query.key
         ? {
-            $or: [{ username: { $regex: req.query.key, $options: 'i' } }]
+            $or: [
+              { title: { $regex: req.query.key, $options: 'i' } },
+              { text: { $regex: req.query.key, $options: 'i' } }
+            ]
           }
         : {}
     );
-    const result = await Question.aggregate([
-      {
-        $lookup: {
-          from: 'users',
-          localField: 'author',
-          foreignField: '_id',
-          as: 'author'
-        }
-      },
-      {
-        $unwind: {
-          path: '$author',
-          preserveNullAndEmptyArrays: true
-        }
-      },
-      {
-        $match: {
-          $and: [
-            {
-              $or: [
-                { title: { $regex: req.query.key || '(.*?)', $options: 'i' } },
-                { text: { $regex: req.query.key || '(.*?)', $options: 'i' } }
-              ]
-            },
-            exp
-              ? {
-                  'author.exp': exp
-                }
-              : {}
-          ]
-        }
-      },
-      {
-        $facet: {
-          count: [
-            {
-              $group: {
-                _id: null,
-                myCount: {
-                  $sum: 1
-                }
-              }
-            }
-          ],
-          paginated: [
-            {
-              $skip: skip
-            },
-            {
-              $limit: pageSize
-            }
-          ]
-        }
-      }
-    ]);
-    const result2 = await User.find(
+
+    const result = await Question.find(
       req.query.key
         ? {
-            $and: [
-              {
-                $or: [{ username: { $regex: req.query.key, $options: 'i' } }]
-              },
-              exp
-                ? {
-                    'author.exp': exp
-                  }
-                : {}
+            $or: [
+              { title: { $regex: req.query.key, $options: 'i' } },
+              { text: { $regex: req.query.key, $options: 'i' } }
             ]
           }
         : {}
     )
       .skip(skip)
       .limit(pageSize);
-    const result3 = await Blog.aggregate([
-      {
-        $lookup: {
-          from: 'users',
-          localField: 'author',
-          foreignField: '_id',
-          as: 'author'
-        }
-      },
-      {
-        $unwind: {
-          path: '$author',
-          preserveNullAndEmptyArrays: true
-        }
-      },
-      {
-        $match: {
-          $and: [
-            {
-              $or: [
-                { title: { $regex: req.query.key || '(.*?)', $options: 'i' } },
-                { text: { $regex: req.query.key || '(.*?)', $options: 'i' } }
-              ]
-            },
-            {
-              'author.exp': exp
-                ? {
-                    'author.exp': exp
-                  }
-                : {}
-            }
-          ]
-        }
-      },
-      {
-        $facet: {
-          count: [
-            {
-              $group: {
-                _id: null,
-                myCount: {
-                  $sum: 1
-                }
-              }
-            }
-          ],
-          paginated: [
-            {
-              $skip: skip
-            },
-            {
-              $limit: pageSize
-            }
-          ]
-        }
-      }
-    ]);
-    console.log(result);
-    const pages = Math.ceil(
-      (result?.[0].count[0]?.myCount ||
-        0 + result2?.length + result3?.[0]?.count[0]?.myCount ||
-        0) / pageSize
-    );
+
+    const pages = Math.ceil(total / pageSize);
 
     res.status(200).json({
       status: 'success',
-      count: result?.[0].paginated.length + result.length + result3?.[0].paginated.length,
+      count: result.length,
       page,
       pages,
-      total: result?.[0]?.count[0]?.myCount || 0 + total2 + result3?.[0]?.count[0]?.myCount || 0,
-      data: { questions: result?.[0].paginated, users: result2, blogs: result3?.[0].paginated }
+      total,
+      data: result
     });
   } catch (error) {
-    console.log(error);
     next(error);
   }
 };
