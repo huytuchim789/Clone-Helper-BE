@@ -88,6 +88,7 @@ exports.listQuestions = async (req, res, next) => {
           }
         : { isBlocked: false }
     )
+      .sort({ created: -1 })
       .skip(skip)
       .limit(pageSize);
 
