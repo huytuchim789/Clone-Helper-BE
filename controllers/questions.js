@@ -54,29 +54,39 @@ exports.show = async (req, res, next) => {
 exports.listQuestions = async (req, res, next) => {
   try {
     const page = parseInt(req.query.page) || 1;
-    const pageSize = parseInt(req.query.limit) || 10;
+    const pageSize = parseInt(req.query.limit) || 6;
     const skip = (page - 1) * pageSize;
 
     const total = await Question.countDocuments(
       req.query.key
         ? {
-            $or: [
-              { title: { $regex: req.query.key, $options: 'i' } },
-              { text: { $regex: req.query.key, $options: 'i' } }
+            $and: [
+              {
+                $or: [
+                  { title: { $regex: req.query.key, $options: 'i' } },
+                  { text: { $regex: req.query.key, $options: 'i' } }
+                ]
+              },
+              { isBlocked: false }
             ]
           }
-        : {}
+        : { isBlocked: false }
     );
 
     const result = await Question.find(
       req.query.key
         ? {
-            $or: [
-              { title: { $regex: req.query.key, $options: 'i' } },
-              { text: { $regex: req.query.key, $options: 'i' } }
+            $and: [
+              {
+                $or: [
+                  { title: { $regex: req.query.key, $options: 'i' } },
+                  { text: { $regex: req.query.key, $options: 'i' } }
+                ]
+              },
+              { isBlocked: false }
             ]
           }
-        : {}
+        : { isBlocked: false }
     )
       .skip(skip)
       .limit(pageSize);

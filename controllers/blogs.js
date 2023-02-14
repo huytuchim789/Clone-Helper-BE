@@ -61,29 +61,39 @@ exports.showBlog = async (req, res, next) => {
 exports.listBlogs = async (req, res, next) => {
   try {
     const page = parseInt(req.query.page) || 1;
-    const pageSize = parseInt(req.query.limit) || 10;
+    const pageSize = parseInt(req.query.limit) || 6;
     const skip = (page - 1) * pageSize;
 
     const total = await Blog.countDocuments(
       req.query.key
         ? {
-            $or: [
-              { title: { $regex: req.query.key, $options: 'i' } },
-              { text: { $regex: req.query.key, $options: 'i' } }
+            $and: [
+              {
+                $or: [
+                  { title: { $regex: req.query.key, $options: 'i' } },
+                  { text: { $regex: req.query.key, $options: 'i' } }
+                ]
+              },
+              { isBlocked: false }
             ]
           }
-        : {}
+        : { isBlocked: false }
     );
 
     const result = await Blog.find(
       req.query.key
         ? {
-            $or: [
-              { title: { $regex: req.query.key, $options: 'i' } },
-              { text: { $regex: req.query.key, $options: 'i' } }
+            $and: [
+              {
+                $or: [
+                  { title: { $regex: req.query.key, $options: 'i' } },
+                  { text: { $regex: req.query.key, $options: 'i' } }
+                ]
+              },
+              { isBlocked: false }
             ]
           }
-        : {}
+        : { isBlocked: false }
     )
       .sort({ created: -1 })
       .skip(skip)
